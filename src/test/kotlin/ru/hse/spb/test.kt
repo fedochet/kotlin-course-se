@@ -15,7 +15,7 @@ class TestSource {
     }
 
     @Test
-    fun `incorrect phrase is rejetced`() {
+    fun `incorrect phrase is rejected`() {
         assertFalse(isCorrectSentence("etis atis animatis etis atis amatis".split(' ')))
     }
 }
