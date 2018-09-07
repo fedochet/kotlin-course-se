@@ -5,9 +5,17 @@ import org.junit.Test
 
 class TestSource {
     @Test
-    fun testExamples() {
+    fun `single correct word is accepted`() {
         assertTrue(isCorrectSentence("petr".split(' ')))
-        assertFalse(isCorrectSentence("etis atis animatis etis atis amatis".split(' ')))
+    }
+
+    @Test
+    fun `correct phrase is accepted`() {
         assertTrue(isCorrectSentence("nataliala kataliala vetra feinites".split(' ')))
+    }
+
+    @Test
+    fun `incorrect phrase is rejetced`() {
+        assertFalse(isCorrectSentence("etis atis animatis etis atis amatis".split(' ')))
     }
 }

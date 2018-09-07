@@ -12,7 +12,7 @@ private enum class WordType {
     VERB, NOUN, ADJECTIVE
 }
 
-private data class Word(val type: WordType, val gender: Gender) {
+private class Word(val type: WordType, val gender: Gender) {
 
     companion object {
         fun parseWord(word: String): Word? =
@@ -34,33 +34,30 @@ private data class Word(val type: WordType, val gender: Gender) {
 
 private fun genderIsSame(validWords: List<Word>): Boolean {
     val expectedGender = validWords.firstOrNull()?.gender ?: return false
-    return validWords.all { it.gender === expectedGender }
+    return validWords.all { it.gender == expectedGender }
 }
 
 private fun structureIsCorrect(validWords: List<Word>): Boolean {
-    val firstNounIndex = validWords.indexOfFirst { it.type === WordType.NOUN }
+    val firstNounIndex = validWords.indexOfFirst { it.type == WordType.NOUN }
     if (firstNounIndex == -1) return false
 
     val adjectives = validWords.subList(0, firstNounIndex)
     val verbs = validWords.subList(firstNounIndex + 1, validWords.size)
 
-    return adjectives.all { it.type === WordType.ADJECTIVE }
-        && verbs.all { it.type === WordType.VERB }
+    return adjectives.all { it.type == WordType.ADJECTIVE }
+        && verbs.all { it.type == WordType.VERB }
 }
 
-private fun isPhrase(words: List<Word?>): Boolean {
-    val validWords = words.filterNotNull()
-
-    return validWords.size == words.size
-        && genderIsSame(validWords)
-        && structureIsCorrect(validWords)
+private fun isPhrase(words: List<Word>): Boolean {
+    return genderIsSame(words) && structureIsCorrect(words)
 }
 
 fun isCorrectSentence(words: List<String>): Boolean {
-    val parsedWords = words.map { Word.parseWord(it) }
+    val parsedWords = words.map {
+        Word.parseWord(it) ?: return false
+    }
 
-    return parsedWords.singleOrNull() != null
-        || isPhrase(parsedWords)
+    return parsedWords.size == 1 || isPhrase(parsedWords)
 }
 
 fun main(args: Array<String>) {
