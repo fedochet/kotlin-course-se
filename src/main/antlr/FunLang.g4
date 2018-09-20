@@ -32,12 +32,12 @@ returnStmt : 'return' expr;
 
 expr
  : functionCall                                     #functionCallExpr
- | left=expr op=(MULT | DIV | MOD) right=expr       #multiplicationExpr
- | left=expr op=(PLUS | MINUS) right=expr           #additiveExpr
- | left=expr op=(LT | GT | LTEQ | GTEQ) right=expr  #relationalExpr
- | left=expr op=(EQ | NEQ) right=expr               #relationalExpr
- | left=expr AND right=expr                         #andExpr
- | left=expr OR right=expr                          #orExpr
+ | left=expr op=(MULT | DIV | MOD) right=expr       #binaryExpr
+ | left=expr op=(PLUS | MINUS) right=expr           #binaryExpr
+ | left=expr op=(LT | GT | LTEQ | GTEQ) right=expr  #binaryExpr
+ | left=expr op=(EQ | NEQ) right=expr               #binaryExpr
+ | left=expr AND right=expr                         #binaryExpr
+ | left=expr OR right=expr                          #binaryExpr
  | '(' expr ')'                                     #bracedExpr
  | IDENT                                            #variableExpr
  | LITERAL                                          #literalExpr

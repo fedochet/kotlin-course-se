@@ -2,13 +2,11 @@ package ru.hse.spb.parser
 
 import org.antlr.v4.runtime.BufferedTokenStream
 import org.antlr.v4.runtime.CharStreams
-import org.assertj.core.api.Assertions
 import org.assertj.core.api.Assertions.*
 import org.junit.Test
 import ru.hse.spb.funlang.*
 
 class ExpressionParserTest {
-
 
     @Test
     fun `number literals are parsed`() {

@@ -1,5 +1,6 @@
 package ru.hse.spb.parser
 
+import org.antlr.v4.runtime.Token
 import ru.hse.spb.funlang.*
 
 object ExpressionParser : FunLangBaseVisitor<Expression>() {
@@ -12,47 +13,10 @@ object ExpressionParser : FunLangBaseVisitor<Expression>() {
         return Literal(ctx.LITERAL().text.toInt())
     }
 
-    override fun visitAdditiveExpr(ctx: FunLangParser.AdditiveExprContext): Expression {
+    override fun visitBinaryExpr(ctx: FunLangParser.BinaryExprContext): Expression {
         val left = visit(ctx.left)
         val right = visit(ctx.right)
-
-        val op = when (ctx.op.type) {
-            FunLangParser.PLUS -> Operation.PLUS
-            FunLangParser.MINUS ->  Operation.MINUS
-            else -> throw IllegalArgumentException("Illegal operation in $ctx (should be `plus` or `minus`).")
-        }
-
-        return BinOp(left, op, right)
-    }
-
-    override fun visitMultiplicationExpr(ctx: FunLangParser.MultiplicationExprContext): Expression {
-        val left = visit(ctx.left)
-        val right = visit(ctx.right)
-
-        val op = when (ctx.op.type) {
-            FunLangParser.MULT -> Operation.MULTIPLY
-            FunLangParser.DIV ->  Operation.DIVIDE
-            FunLangParser.MOD -> Operation.MOD
-            else -> throw IllegalArgumentException("Illegal operation in $ctx (should be `*`, `%` or `/`).")
-        }
-
-        return BinOp(left, op, right)
-    }
-
-    override fun visitRelationalExpr(ctx: FunLangParser.RelationalExprContext): Expression {
-        val left = visit(ctx.left)
-        val right = visit(ctx.right)
-
-        val op = when (ctx.op.type) {
-            FunLangParser.LT -> Operation.LT
-            FunLangParser.GT -> Operation.GT
-            FunLangParser.LTEQ -> Operation.LTEQ
-            FunLangParser.GTEQ -> Operation.GTEQ
-            FunLangParser.EQ -> Operation.EQ
-            FunLangParser.NEQ -> Operation.NEQ
-            else -> throw IllegalArgumentException("Illegal operation in $ctx.")
-        }
-
+        val op = parseOp(ctx.op)
         return BinOp(left, op, right)
     }
 
@@ -67,4 +31,20 @@ object ExpressionParser : FunLangBaseVisitor<Expression>() {
 
         return FunctionCall(functionName, arguments)
     }
+}
+
+private fun parseOp(op: Token) : Operation = when (op.type) {
+    FunLangParser.LT -> Operation.LT
+    FunLangParser.GT -> Operation.GT
+    FunLangParser.LTEQ -> Operation.LTEQ
+    FunLangParser.GTEQ -> Operation.GTEQ
+    FunLangParser.EQ -> Operation.EQ
+    FunLangParser.NEQ -> Operation.NEQ
+    FunLangParser.MULT -> Operation.MULTIPLY
+    FunLangParser.DIV ->  Operation.DIVIDE
+    FunLangParser.MOD -> Operation.MOD
+    FunLangParser.PLUS -> Operation.PLUS
+    FunLangParser.MINUS ->  Operation.MINUS
+
+    else -> throw IllegalArgumentException("Illegal operator $op.")
 }
