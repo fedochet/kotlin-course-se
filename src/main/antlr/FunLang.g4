@@ -35,17 +35,16 @@ expr
  | left=expr op=(MULT | DIV | MOD) right=expr       #multiplicationExpr
  | left=expr op=(PLUS | MINUS) right=expr           #additiveExpr
  | left=expr op=(LT | GT | LTEQ | GTEQ) right=expr  #relationalExpr
- | left=expr op=(EQ | NEQ) right=expr               #equalityExpr
+ | left=expr op=(EQ | NEQ) right=expr               #relationalExpr
  | left=expr AND right=expr                         #andExpr
  | left=expr OR right=expr                          #orExpr
  | '(' expr ')'                                     #bracedExpr
- | variableRef                                      #variableExpr
+ | IDENT                                            #variableExpr
  | LITERAL                                          #literalExpr
  ;
 
 functionCall : IDENT'('arguments')';
 arguments : (expr (',' expr)*)?;
-variableRef : IDENT;
 
 /* Идентификатор как в Си */
 IDENT : [a-zA-Z_][a-zA-Z_0-9]*;
