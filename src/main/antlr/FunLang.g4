@@ -26,7 +26,7 @@ function: 'fun' IDENT '(' parameterNames ')' blockWithBraces;
 variable : 'var' IDENT ('=' expr)?;
 parameterNames : (IDENT (',' IDENT)*)?;
 whileStmt : 'while' '(' expr ')' blockWithBraces;
-ifStmt : 'if' '(' expr ')' blockWithBraces ('else' blockWithBraces)?;
+ifStmt : 'if' '(' expr ')' thenBlock=blockWithBraces ('else' elseBlock=blockWithBraces)?;
 assignmentStmt : IDENT '=' expr;
 returnStmt : 'return' expr;
 

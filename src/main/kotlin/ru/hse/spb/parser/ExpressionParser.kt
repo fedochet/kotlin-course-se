@@ -27,7 +27,7 @@ object ExpressionParser : FunLangBaseVisitor<Expression>() {
     override fun visitFunctionCallExpr(ctx: FunLangParser.FunctionCallExprContext): Expression {
         val functionCall = ctx.functionCall()
         val functionName = functionCall.IDENT().text
-        val arguments = functionCall.arguments().expr().mapNotNull { visit(it) }
+        val arguments = functionCall.arguments().expr().map { visit(it) }
 
         return FunctionCall(functionName, arguments)
     }

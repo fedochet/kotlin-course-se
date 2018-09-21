@@ -6,7 +6,7 @@ data class Block(val statemens: List<Statement>)
 
 sealed class Statement
 data class VarDeclaration(val name: String, val initializer: Expression?): Statement()
-data class FunctionDeclaration(val name: String, val args: List<String>): Statement()
+data class FunctionDeclaration(val name: String, val args: List<String>, val body: Block): Statement()
 data class While(val condition: Expression, val body: Block) : Statement()
 data class If(val condition: Expression, val thenBlock: Block, val elseBlock: Block?) : Statement()
 data class Assignment(val name: String, val value: Expression) : Statement()
