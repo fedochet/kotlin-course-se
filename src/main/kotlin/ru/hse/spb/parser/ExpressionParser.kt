@@ -33,7 +33,7 @@ object ExpressionParser : FunLangBaseVisitor<Expression>() {
     }
 }
 
-private fun parseOp(op: Token) : Operation = when (op.type) {
+private fun parseOp(op: Token): Operation = when (op.type) {
     FunLangParser.LT -> Operation.LT
     FunLangParser.GT -> Operation.GT
     FunLangParser.LTEQ -> Operation.LTEQ
@@ -41,10 +41,10 @@ private fun parseOp(op: Token) : Operation = when (op.type) {
     FunLangParser.EQ -> Operation.EQ
     FunLangParser.NEQ -> Operation.NEQ
     FunLangParser.MULT -> Operation.MULTIPLY
-    FunLangParser.DIV ->  Operation.DIVIDE
+    FunLangParser.DIV -> Operation.DIVIDE
     FunLangParser.MOD -> Operation.MOD
     FunLangParser.PLUS -> Operation.PLUS
-    FunLangParser.MINUS ->  Operation.MINUS
+    FunLangParser.MINUS -> Operation.MINUS
 
     else -> throw IllegalArgumentException("Illegal operator $op.")
 }

@@ -15,7 +15,7 @@ blockWithBraces : '{' block '}';
 statement
  : function
  | variable
- | expr
+ | exprStmt
  | whileStmt
  | ifStmt
  | assignmentStmt
@@ -23,12 +23,15 @@ statement
  ;
 
 function: 'fun' IDENT '(' parameterNames ')' blockWithBraces;
-variable : 'var' IDENT ('=' expr)?;
+variable : 'var' WS IDENT (WS? '=' WS? expr)?;
 parameterNames : (IDENT (',' IDENT)*)?;
 whileStmt : 'while' '(' expr ')' blockWithBraces;
 ifStmt : 'if' '(' expr ')' thenBlock=blockWithBraces ('else' elseBlock=blockWithBraces)?;
 assignmentStmt : IDENT '=' expr;
 returnStmt : 'return' expr;
+exprStmt : expr;
+
+WS : (' ' | '\t')+ -> channel(HIDDEN);
 
 expr
  : functionCall                                     #functionCallExpr

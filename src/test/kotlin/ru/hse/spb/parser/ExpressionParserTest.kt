@@ -68,8 +68,6 @@ class ExpressionParserTest {
         assertThat(parse("1!:2")).isEqualTo(BinOp(Literal(1), Operation.NEQ, Literal(2)))
     }
 
-
-
     @Test
     fun `comparisons have higher priority than arithmetics`() {
         assertThat(parse("1+2<3+4")).isEqualTo(
@@ -79,13 +77,6 @@ class ExpressionParserTest {
         assertThat(parse("1*2>3/4")).isEqualTo(
             BinOp(Literal(1) * Literal(2), Operation.GT, Literal(3) / Literal(4))
         )
-    }
-
-    private fun parse(code: String): Expression {
-        val lexer = FunLangLexer(CharStreams.fromString(code))
-        val parser = FunLangParser(BufferedTokenStream(lexer))
-
-        return ExpressionParser.visit(parser.parse())
     }
 
     @Test
@@ -111,6 +102,13 @@ class ExpressionParserTest {
     }
 
     // convinience operators to ease up testing
+    private fun parse(code: String): Expression {
+        val lexer = FunLangLexer(CharStreams.fromString(code))
+        val parser = FunLangParser(BufferedTokenStream(lexer))
+
+        return ExpressionParser.visit(parser.parse())
+    }
+
     private operator fun Expression.plus(other: Expression) = BinOp(this, Operation.PLUS, other)
     private operator fun Expression.minus(other: Expression) = BinOp(this, Operation.MINUS, other)
     private operator fun Expression.times(other: Expression) = BinOp(this, Operation.MULTIPLY, other)
