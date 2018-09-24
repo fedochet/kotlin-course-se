@@ -23,7 +23,7 @@ statement
  ;
 
 function: 'fun' IDENT '(' parameterNames ')' blockWithBraces;
-variable : 'var' WS IDENT (WS? '=' WS? expr)?;
+variable : 'var' IDENT ('=' expr)?;
 parameterNames : (IDENT (',' IDENT)*)?;
 whileStmt : 'while' '(' expr ')' blockWithBraces;
 ifStmt : 'if' '(' expr ')' thenBlock=blockWithBraces ('else' elseBlock=blockWithBraces)?;
@@ -31,7 +31,7 @@ assignmentStmt : IDENT '=' expr;
 returnStmt : 'return' expr;
 exprStmt : expr;
 
-WS : (' ' | '\t')+ -> channel(HIDDEN);
+WS : [ \t\r\n] -> skip;
 
 expr
  : functionCall                                     #functionCallExpr
