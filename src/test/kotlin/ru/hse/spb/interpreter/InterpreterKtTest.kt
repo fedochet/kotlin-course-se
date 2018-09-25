@@ -5,7 +5,7 @@ import org.junit.Test
 import ru.hse.spb.funlang.*
 
 
-internal class InterpreterKtTest {
+class InterpreterKtTest {
     @Test
     fun `eval of empty block returns zero`() {
         assertThat(evalBlock(Block(emptyList()), Context.empty()))
@@ -18,6 +18,52 @@ internal class InterpreterKtTest {
 
         assertThat(evalBlock(blockWithReturn, Context.empty()))
             .isEqualTo(2)
+    }
+
+    @Test
+    fun `function declared in block is added to context`() {
+        val fun1 = FunctionDeclaration("fun1", emptyList(), Block(emptyList()))
+        val blockWithDeclaration = Block(listOf(
+            fun1
+        ))
+
+        val ctx = Context.empty()
+        evalBlock(blockWithDeclaration, ctx)
+
+        assertThat(ctx.findFunction("fun1")).isEqualTo(fun1)
+    }
+
+    @Test(expected = FunctionRedeclarationException::class)
+    fun `two functions with same name cannot be in the same scope`() {
+        val fun1 = FunctionDeclaration("fun1", emptyList(), Block(emptyList()))
+        val blockWithDeclaration = Block(listOf(
+            fun1,
+            fun1
+        ))
+
+        evalBlock(blockWithDeclaration, Context.empty())
+    }
+
+    @Test
+    fun `variable declared in block is added to context`() {
+        val blockWithDeclaration = Block(listOf(
+            VarDeclaration("x", Literal(1))
+        ))
+
+        val ctx = Context.empty()
+        evalBlock(blockWithDeclaration, ctx)
+
+        assertThat(ctx.getVariable("x")).isEqualTo(1)
+    }
+
+    @Test(expected = VariableRedeclarationException::class)
+    fun `variable declared in block twice causes name conflict`() {
+        val blockWithDeclaration = Block(listOf(
+            VarDeclaration("x", Literal(1)),
+            VarDeclaration("x", Literal(2))
+        ))
+
+        evalBlock(blockWithDeclaration, Context.empty())
     }
 
     @Test
@@ -40,7 +86,7 @@ internal class InterpreterKtTest {
 
     @Test
     fun `eval of literal is its value`() {
-        assertThat(evalStatement(Literal(1), Context.empty())).isEqualTo(1)
+        assertThat(evalExpression(Literal(1), Context.empty())).isEqualTo(1)
     }
 
     @Test
@@ -48,20 +94,60 @@ internal class InterpreterKtTest {
         val context = Context.empty()
         context.declareVariable("x", 42)
 
-        assertThat(evalStatement(Ident("x"), context)).isEqualTo(42)
+        assertThat(evalExpression(Ident("x"), context)).isEqualTo(42)
     }
 
     @Test(expected = VariableNotFound::class)
     fun `eval of ident without variable throws exception`() {
-        evalStatement(Ident("x"), Context.empty())
+        evalExpression(Ident("x"), Context.empty())
     }
 
     @Test
     fun `eval of binoperations works properly`() {
-        assertThat(evalStatement(Literal(10) + Literal(5), Context.empty())).isEqualTo(15)
-        assertThat(evalStatement(Literal(10) - Literal(5), Context.empty())).isEqualTo(5)
-        assertThat(evalStatement(Literal(10) * Literal(5), Context.empty())).isEqualTo(50)
-        assertThat(evalStatement(Literal(10) / Literal(5), Context.empty())).isEqualTo(2)
-        assertThat(evalStatement(Literal(10) % Literal(5), Context.empty())).isEqualTo(0)
+        assertThat(evalExpression(Literal(10) + Literal(5), Context.empty())).isEqualTo(15)
+        assertThat(evalExpression(Literal(10) - Literal(5), Context.empty())).isEqualTo(5)
+        assertThat(evalExpression(Literal(10) * Literal(5), Context.empty())).isEqualTo(50)
+        assertThat(evalExpression(Literal(10) / Literal(5), Context.empty())).isEqualTo(2)
+        assertThat(evalExpression(Literal(10) % Literal(5), Context.empty())).isEqualTo(0)
+    }
+
+    @Test
+    fun `function with empty body returns zero`() {
+        val fooFunction = FunctionDeclaration("foo", emptyList(), Block(emptyList()))
+
+        assertThat(call(fooFunction, emptyList(), Context.empty())).isEqualTo(0)
+    }
+
+    @Test
+    fun `identity function works`() {
+        val identity = FunctionDeclaration("id", listOf("x"), Block(listOf(Return(Ident("x")))))
+
+        assertThat(call(identity, listOf(Literal(1)), Context.empty())).isEqualTo(1)
+        assertThat(call(identity, listOf(Literal(42)), Context.empty())).isEqualTo(42)
+    }
+
+    @Test
+    fun `function call arguments can reference context`() {
+        val identity = FunctionDeclaration("id", listOf("x"), Block(listOf(Return(Ident("x")))))
+
+        val ctx = Context.empty()
+        ctx.declareVariable("y", 42)
+
+        assertThat(call(identity, listOf(Ident("y")), ctx)).isEqualTo(42)
+    }
+
+    @Test
+    fun `function body can reference context`() {
+        val closure = FunctionDeclaration(
+            "foo",
+            emptyList(),
+            Block(listOf(Return(Ident("x") + Ident("y"))))
+        )
+
+        val ctx = Context.empty()
+        ctx.declareVariable("x", 10)
+        ctx.declareVariable("y", 20)
+
+        assertThat(call(closure, emptyList(), ctx)).isEqualTo(30)
     }
 }

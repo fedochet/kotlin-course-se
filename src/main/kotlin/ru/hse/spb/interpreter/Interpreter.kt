@@ -2,21 +2,38 @@ package ru.hse.spb.interpreter
 
 import ru.hse.spb.funlang.*
 import ru.hse.spb.funlang.Operation.*
-import java.lang.RuntimeException
 
 class VariableNotFound(val name: String) : RuntimeException()
+class VariableRedeclarationException(val name: String) : RuntimeException()
+class WrongNumberOfArgsException(val expected: List<String>, val actual: List<Expression>) : RuntimeException()
+class FunctionRedeclarationException(val name: String) : RuntimeException()
 
 class Context private constructor(val parent: Context? = null) {
-    private val variables: MutableMap<String, Int> = mutableMapOf();
+    private val variables: MutableMap<String, Int> = mutableMapOf()
+    private val functions: MutableMap<String, FunctionDeclaration> = mutableMapOf()
 
-    fun declareFunction(declaration: FunctionDeclaration) {}
-    fun findFunction(): FunctionDeclaration? = null
+    fun declareFunction(declaration: FunctionDeclaration) {
+        if (declaration.name in functions) throw FunctionRedeclarationException(declaration.name)
+        functions[declaration.name] = declaration
+    }
+
+    fun findFunction(name: String): FunctionDeclaration {
+        return functions[name]
+            ?: parent?.findFunction(name)
+            ?: throw VariableNotFound(name)
+    }
 
     fun declareVariable(name: String, initializer: Int) {
+        if (name in variables) throw VariableRedeclarationException(name)
         variables[name] = initializer
     }
 
-    fun getVariable(name: String): Int = variables[name] ?: throw VariableNotFound(name)
+    fun getVariable(name: String): Int {
+        return variables[name]
+            ?: parent?.getVariable(name)
+            ?: throw VariableNotFound(name)
+    }
+
     fun setVariable(name: String, value: Int) {
         when {
             name in variables -> variables[name] = value
@@ -42,33 +59,60 @@ fun evalBlock(block: Block, ctx: Context): Int {
     return if (result is ReturnResult) result.value else 0
 }
 
-fun evalStatement(statement: Expression, ctx: Context): Int {
-    return when (statement) {
-        is Literal -> statement.value
-        is Ident -> ctx.getVariable(statement.name)
-        is BinOp -> evalBinop(evalStatement(statement.left, ctx), statement.op, (evalStatement(statement.right, ctx)))
-        else -> TODO()
+fun call(function: FunctionDeclaration, args: List<Expression>, ctx: Context): Int {
+    if (function.args.size != args.size) throw WrongNumberOfArgsException(function.args, args)
+
+    val functionCtx = ctx.derive()
+    for ((name, value) in function.args.zip(args)) {
+        functionCtx.declareVariable(name, evalExpression(value, ctx))
     }
+
+    return evalBlock(function.body, functionCtx)
 }
 
 private fun executeBlock(block: Block, ctx: Context): BlockExecutionResult {
     for (statement in block.statements) {
-        when (statement) {
-            is Return -> return ReturnResult(evalStatement(statement.value, ctx))
-            is If -> {
-                val condition = evalStatement(statement.condition, ctx)
-                val result = if (condition != 0) {
-                    executeBlock(statement.thenBlock, ctx)
-                } else {
-                    statement.elseBlock?.let { executeBlock(it, ctx) }
-                }
-
-                if (result is ReturnResult) return result
-            }
-        }
+        val result = executeStatement(statement, ctx)
+        if (result is ReturnResult) return result
     }
 
     return NoReturnResult
+}
+
+private fun executeStatement(statement: Statement, ctx: Context): BlockExecutionResult =
+    when (statement) {
+        is Return -> ReturnResult(evalExpression(statement.value, ctx))
+
+        is If -> {
+            val condition = evalExpression(statement.condition, ctx)
+            if (condition != 0) {
+                executeBlock(statement.thenBlock, ctx)
+            } else {
+                statement.elseBlock?.let { executeBlock(it, ctx) } ?: NoReturnResult
+            }
+        }
+
+        is FunctionDeclaration -> {
+            ctx.declareFunction(statement)
+            NoReturnResult
+        }
+
+        is VarDeclaration -> {
+            val initializer = statement.initializer?.let { evalExpression(it, ctx) } ?: 0
+            ctx.declareVariable(statement.name, initializer)
+            NoReturnResult
+        }
+
+        else -> NoReturnResult
+    }
+
+fun evalExpression(expr: Expression, ctx: Context): Int {
+    return when (expr) {
+        is Literal -> expr.value
+        is Ident -> ctx.getVariable(expr.name)
+        is BinOp -> evalBinop(evalExpression(expr.left, ctx), expr.op, (evalExpression(expr.right, ctx)))
+        is FunctionCall -> call(ctx.findFunction(expr.name), expr.args, ctx)
+    }
 }
 
 private fun evalBinop(left: Int, op: Operation, right: Int): Int =
