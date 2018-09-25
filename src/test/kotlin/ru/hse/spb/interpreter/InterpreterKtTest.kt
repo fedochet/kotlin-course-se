@@ -66,6 +66,28 @@ class InterpreterKtTest {
         evalBlock(blockWithDeclaration, Context.empty())
     }
 
+    @Test(expected = VariableRedeclarationException::class)
+    fun `cannot declare variable with same name as function argument`() {
+        val blockWithDeclaration = Block(listOf(VarDeclaration("x", Literal(1))))
+
+        val function = FunctionDeclaration("fun1", listOf("x"), blockWithDeclaration)
+
+        assertThat(call(function, listOf(Literal(1)), Context.empty()))
+    }
+
+    @Test(expected = VariableNotFound::class)
+    fun `variable declared in then block cannot be used outside`() {
+        val blockWithDeclaration = Block(listOf(
+            If(Literal(1),
+                Block(listOf(VarDeclaration("x", Literal(10)))),
+                null),
+            Ident("x")
+        ))
+
+        evalBlock(blockWithDeclaration, Context.empty())
+    }
+
+
     @Test
     fun `eval of block with if depends on value`() {
         val blockWithIfThen = Block(listOf(

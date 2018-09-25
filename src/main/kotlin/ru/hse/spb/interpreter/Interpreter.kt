@@ -86,9 +86,9 @@ private fun executeStatement(statement: Statement, ctx: Context): BlockExecution
         is If -> {
             val condition = evalExpression(statement.condition, ctx)
             if (condition != 0) {
-                executeBlock(statement.thenBlock, ctx)
+                executeBlock(statement.thenBlock, ctx.derive())
             } else {
-                statement.elseBlock?.let { executeBlock(it, ctx) } ?: NoReturnResult
+                statement.elseBlock?.let { executeBlock(it, ctx.derive()) } ?: NoReturnResult
             }
         }
 
@@ -103,7 +103,12 @@ private fun executeStatement(statement: Statement, ctx: Context): BlockExecution
             NoReturnResult
         }
 
-        else -> NoReturnResult
+        is Expression -> {
+            evalExpression(statement, ctx)
+            NoReturnResult
+        }
+
+        else -> TODO()
     }
 
 fun evalExpression(expr: Expression, ctx: Context): Int {
