@@ -2,7 +2,7 @@ package ru.hse.spb.funlang
 
 // All classes are data classes to ease up debugging.
 
-data class Block(val statemens: List<Statement>)
+data class Block(val statements: List<Statement>)
 
 sealed class Statement
 data class VarDeclaration(val name: String, val initializer: Expression?): Statement()
@@ -25,3 +25,9 @@ enum class Operation {
     GT, LT, GTEQ, LTEQ,
     EQ, NEQ,
 }
+
+operator fun Expression.plus(other: Expression) = BinOp(this, Operation.PLUS, other)
+operator fun Expression.minus(other: Expression) = BinOp(this, Operation.MINUS, other)
+operator fun Expression.times(other: Expression) = BinOp(this, Operation.MULTIPLY, other)
+operator fun Expression.div(other: Expression) = BinOp(this, Operation.DIVIDE, other)
+operator fun Expression.rem(other: Expression) = BinOp(this, Operation.MOD, other)

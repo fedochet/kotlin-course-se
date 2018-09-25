@@ -109,9 +109,4 @@ class ExpressionParserTest {
         return ExpressionParser.visit(parser.parse())
     }
 
-    private operator fun Expression.plus(other: Expression) = BinOp(this, Operation.PLUS, other)
-    private operator fun Expression.minus(other: Expression) = BinOp(this, Operation.MINUS, other)
-    private operator fun Expression.times(other: Expression) = BinOp(this, Operation.MULTIPLY, other)
-    private operator fun Expression.div(other: Expression) = BinOp(this, Operation.DIVIDE, other)
-    private operator fun Expression.rem(other: Expression) = BinOp(this, Operation.MOD, other)
 }
