@@ -10,10 +10,9 @@ data class FunctionDeclaration(val name: String, val args: List<String>, val bod
 data class While(val condition: Expression, val body: Block) : Statement()
 data class If(val condition: Expression, val thenBlock: Block, val elseBlock: Block?) : Statement()
 data class Assignment(val name: String, val value: Expression) : Statement()
-data class BareExpression(val expression: Expression) : Statement()
 data class Return(val value: Expression) : Statement()
 
-sealed class Expression
+sealed class Expression : Statement()
 data class FunctionCall(val name: String, val args: List<Expression>) : Expression()
 data class BinOp(val left: Expression, val op: Operation, val right: Expression) : Expression()
 data class Ident(val name: String) : Expression()

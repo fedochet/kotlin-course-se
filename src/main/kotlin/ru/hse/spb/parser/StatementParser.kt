@@ -46,7 +46,7 @@ object StatementParser : FunLangBaseVisitor<Statement>() {
     }
 
     override fun visitExprStmt(ctx: FunLangParser.ExprStmtContext): Statement {
-        return BareExpression(ExpressionParser.visit(ctx.expr()))
+        return ExpressionParser.visit(ctx.expr())
     }
 
 }
