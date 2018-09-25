@@ -16,8 +16,14 @@ class Context private constructor(val parent: Context? = null) {
         variables[name] = initializer
     }
 
-    fun getVariable(name: String): Int? = variables[name]
-    fun setVariable(name: String) {}
+    fun getVariable(name: String): Int = variables[name] ?: throw VariableNotFound(name)
+    fun setVariable(name: String, value: Int) {
+        when {
+            name in variables -> variables[name] = value
+            parent != null -> parent.setVariable(name, value)
+            else -> throw VariableNotFound(name)
+        }
+    }
 
     fun derive(): Context = Context(this)
 
@@ -39,7 +45,7 @@ fun evalBlock(block: Block, ctx: Context): Int {
 fun evalStatement(statement: Expression, ctx: Context): Int {
     return when (statement) {
         is Literal -> statement.value
-        is Ident -> ctx.getVariable(statement.name) ?: throw VariableNotFound(statement.name)
+        is Ident -> ctx.getVariable(statement.name)
         is BinOp -> evalBinop(evalStatement(statement.left, ctx), statement.op, (evalStatement(statement.right, ctx)))
         else -> TODO()
     }
