@@ -8,11 +8,18 @@ import ru.hse.spb.parser.BlockParser
 import ru.hse.spb.parser.FunLangLexer
 import ru.hse.spb.parser.FunLangParser
 
+val RUNTIME = Context.empty().apply {
+    addBuiltInFunction("println") { args ->
+        println(args.joinToString(separator = " "))
+        0
+    }
+}
+
 fun main(args: Array<String>) {
     val lexer = FunLangLexer(CharStreams.fromFileName(args[0]))
     val parser = FunLangParser(BufferedTokenStream(lexer))
 
     val block = BlockParser.visit(parser.parse())
 
-    evalBlock(block, Context.empty())
+    evalBlock(block, RUNTIME)
 }

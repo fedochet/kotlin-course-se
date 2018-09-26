@@ -29,6 +29,17 @@ dependencies {
     testCompile group: 'org.assertj', name: 'assertj-core', version: '3.11.1'
 }
 
+jar {
+    manifest {
+        attributes 'Main-Class': 'ru.hse.spb.MainKt'
+    }
+
+    // This line of code recursively collects and copies all of a project's files
+    // and adds them to the JAR itself. One can extend this task, to skip certain
+    // files or particular types at will
+    from { configurations.compile.collect { it.isDirectory() ? it : zipTree(it) } }
+}
+
 compileKotlin {
     kotlinOptions.jvmTarget = "1.8"
 }

@@ -5,7 +5,7 @@ import org.junit.Test
 import ru.hse.spb.funlang.*
 
 
-class InterpreterKtTest {
+class InterpreterTest {
     @Test
     fun `eval of empty block returns zero`() {
         assertThat(evalBlock(Block(emptyList()), Context.empty()))
@@ -21,16 +21,17 @@ class InterpreterKtTest {
     }
 
     @Test
-    fun `function declared in block is added to context`() {
-        val fun1 = FunctionDeclaration("fun1", emptyList(), Block(emptyList()))
-        val blockWithDeclaration = Block(listOf(
-            fun1
-        ))
-
+    fun `builtin fun can be used`() {
+        var savedArgs = emptyList<Int>()
         val ctx = Context.empty()
-        evalBlock(blockWithDeclaration, ctx)
+        ctx.addBuiltInFunction("print") { args ->
+            savedArgs = args
+            0
+        }
 
-        assertThat(ctx.findFunction("fun1")).isEqualTo(fun1)
+        evalExpression(FunctionCall("print", listOf(Literal(1), Literal(2))), ctx)
+
+        assertThat(savedArgs).containsExactly(1, 2)
     }
 
     @Test(expected = FunctionRedeclarationException::class)

@@ -8,16 +8,29 @@ class VariableRedeclarationException(val name: String) : RuntimeException()
 class WrongNumberOfArgsException(val expected: List<String>, val actual: List<Expression>) : RuntimeException()
 class FunctionRedeclarationException(val name: String) : RuntimeException()
 
+class ContextFunction(val callable: (List<Expression>, Context) -> Int) {
+    fun call(args: List<Expression>, ctx: Context): Int {
+        return callable(args, ctx)
+    }
+}
+
 class Context private constructor(val parent: Context? = null) {
     private val variables: MutableMap<String, kotlin.Int> = mutableMapOf()
-    private val functions: MutableMap<String, FunctionDeclaration> = mutableMapOf()
+    private val functions: MutableMap<String, ContextFunction> = mutableMapOf()
+
+    fun addBuiltInFunction(name: String, function: (List<Int>) -> Int) {
+        if (name in functions) throw FunctionRedeclarationException(name)
+        functions[name] = ContextFunction { args, ctx ->
+            function(args.map { evalExpression(it, ctx) })
+        }
+    }
 
     fun declareFunction(declaration: FunctionDeclaration) {
         if (declaration.name in functions) throw FunctionRedeclarationException(declaration.name)
-        functions[declaration.name] = declaration
+        functions[declaration.name] = ContextFunction { args, ctx -> call(declaration, args, ctx) }
     }
 
-    fun findFunction(name: String): FunctionDeclaration {
+    fun findFunction(name: String): ContextFunction {
         return functions[name]
             ?: parent?.findFunction(name)
             ?: throw VariableNotFound(name)
@@ -109,7 +122,7 @@ fun evalExpression(expr: Expression, ctx: Context): kotlin.Int {
         is Literal -> expr.value
         is Ident -> ctx.getVariable(expr.name)
         is BinOp -> evalBinop(evalExpression(expr.left, ctx), expr.op, (evalExpression(expr.right, ctx)))
-        is FunctionCall -> call(ctx.findFunction(expr.name), expr.args, ctx)
+        is FunctionCall -> ctx.findFunction(expr.name).call(expr.args, ctx)
     }
 }
 
