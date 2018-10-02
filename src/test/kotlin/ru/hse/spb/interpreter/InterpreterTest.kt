@@ -80,8 +80,7 @@ class InterpreterTest {
     fun `variable declared in then block cannot be used outside`() {
         val blockWithDeclaration = Block(listOf(
             If(Literal(1),
-                Block(listOf(VarDeclaration("x", Literal(10)))),
-                null),
+                Block(listOf(VarDeclaration("x", Literal(10))))),
             Ident("x")
         ))
 

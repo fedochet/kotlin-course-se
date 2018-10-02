@@ -51,7 +51,7 @@ class StatementParserTest {
             """.trimIndent())).isEqualTo(
             If(Ident("i"), Block(listOf(
                 FunctionCall("print", listOf(Ident("i"))))
-            ), null)
+            ))
         )
     }
 

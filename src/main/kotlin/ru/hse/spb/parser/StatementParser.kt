@@ -29,7 +29,7 @@ object StatementParser : FunLangBaseVisitor<Statement>() {
     override fun visitIfStmt(ctx: FunLangParser.IfStmtContext): Statement {
         val cond = ExpressionParser.visit(ctx.expr())
         val thenBlock = BlockParser.visit(ctx.thenBlock)
-        val elseBlock = ctx.elseBlock?.let { BlockParser.visit(it) }
+        val elseBlock = ctx.elseBlock?.let { BlockParser.visit(it) } ?: EMPTY_BLOCK
 
         return If(cond, thenBlock, elseBlock)
     }

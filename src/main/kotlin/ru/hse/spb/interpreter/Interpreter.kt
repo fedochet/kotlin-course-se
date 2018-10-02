@@ -14,7 +14,7 @@ class ContextFunction(val callable: (List<Expression>, Context) -> Int) {
     }
 }
 
-class Context private constructor(val parent: Context? = null) {
+class Context private constructor(private val parent: Context? = null) {
     private val variables: MutableMap<String, kotlin.Int> = mutableMapOf()
     private val functions: MutableMap<String, ContextFunction> = mutableMapOf()
 
@@ -89,11 +89,10 @@ private fun executeStatement(statement: Statement, ctx: Context): Int? {
 
         is If -> {
             val condition = evalExpression(statement.condition, ctx)
-            return if (condition != 0) {
-                executeBlock(statement.thenBlock, ctx.derive())
-            } else {
-                statement.elseBlock?.let { executeBlock(it, ctx.derive()) }
-            }
+            return executeBlock(
+                if (condition != 0) statement.thenBlock else statement.elseBlock,
+                ctx.derive()
+            )
         }
 
         is FunctionDeclaration -> ctx.declareFunction(statement)

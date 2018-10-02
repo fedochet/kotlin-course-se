@@ -31,8 +31,8 @@ assignmentStmt : IDENT '=' expr;
 returnStmt : 'return' expr;
 exprStmt : expr;
 
-COMMENT : '//' ~('\t'|'\n')* -> skip;
 WS : [ \t\r\n] -> skip;
+COMMENT : '//' ~('\t'|'\n')* -> skip;
 
 expr
  : functionCall                                     #functionCallExpr
