@@ -1,6 +1,8 @@
 import java.io.ByteArrayOutputStream
 import java.io.OutputStream
 
+val LINE_SEPARATOR = System.getProperty("line.separator");
+
 typealias Param = Pair<String, String>
 
 data class TexPackage(val name: String, val options: List<String>)
@@ -22,32 +24,33 @@ class Item : Renderable {
     override fun render() = "\\item $buffer"
 }
 
-@EnumerationMarker
-class TexList private constructor(private val name: String) : Renderable {
-    private val items: MutableList<Renderable> = mutableListOf()
-
-    fun item(builder: Item.() -> Unit) {
-        items.add(Item().apply(builder))
-    }
+abstract class TexTag : Renderable {
+    abstract val name: String
+    protected val content: MutableList<String> = mutableListOf()
 
     fun itemize(action: TexList.() -> Unit) {
-        items.add(itemized().apply(action))
+        content.add(TexList.itemized().apply(action).render())
     }
 
     fun enumerate(action: TexList.() -> Unit) {
-        items.add(enumerated().apply(action))
+        content.add(TexList.enumerated().apply(action).render())
     }
 
     override fun render(): String {
-        val buffer = StringBuilder()
-
-        buffer.appendln("\\begin{$name}")
-        for (item in items) {
-            buffer.appendln(item.render())
+        return buildString {
+            appendln("\\begin{$name}")
+            for (item in content) {
+                appendln(item)
+            }
+            append("\\end{$name}")
         }
-        buffer.append("\\end{$name}")
+    }
+}
 
-        return buffer.toString()
+@EnumerationMarker
+class TexList private constructor(override val name: String) : TexTag() {
+    fun item(builder: Item.() -> Unit) {
+        content.add(Item().apply(builder).render())
     }
 
     companion object {
@@ -56,9 +59,8 @@ class TexList private constructor(private val name: String) : Renderable {
     }
 }
 
-class BeamerFrame {
-    fun itemize(action: TexList.() -> Unit) = TexList.itemized().apply(action)
-    fun enumerate(action: TexList.() -> Unit) = TexList.enumerated().apply(action)
+class BeamerFrame : TexTag() {
+    override val name: String = "frame"
 }
 
 class GenericTag {
@@ -120,11 +122,27 @@ class TexBuilder : Renderable {
         }.flush()
     }
 
+    fun equation(builder: EquationEnv.() -> Unit) {
+        content.add(EquationEnv().apply(builder).render())
+    }
+
     fun customTag(name: String, vararg params: Param, builder: GenericTag.() -> Unit) = GenericTag().apply(builder)
 
     private fun TexPackage.render(): String {
         val formattedOptions = if (options.isNotEmpty()) options.joinToString(",", "[", "]") else ""
         return "\\usepackage$formattedOptions{$name}"
+    }
+}
+
+class EquationEnv : Renderable {
+    private val content: MutableList<String> = mutableListOf()
+
+    override fun render(): String {
+        return content.joinToString(LINE_SEPARATOR, "\\begin{equation}$LINE_SEPARATOR", "$LINE_SEPARATOR\\end{equation}")
+    }
+
+    operator fun String.unaryPlus() {
+        content.add(this)
     }
 }
 

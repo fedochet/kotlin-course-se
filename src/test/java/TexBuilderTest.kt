@@ -110,12 +110,24 @@ class TexBuilderTest {
             documentWithText.render()
         )
     }
-
-
+    
     @Test
     fun `document can contain math equations`() {
-        document {
-
+        val documentWithMath = document {
+            equation {
+                +"x^2 + 3 \\neq \\sqrt{4}"
+            }
         }
+
+        assertEquals(
+            """
+            \begin{document}
+            \begin{equation}
+            x^2 + 3 \neq \sqrt{4}
+            \end{equation}
+            \end{document}
+            """.trimIndent(),
+            documentWithMath.render()
+        )
     }
 }
