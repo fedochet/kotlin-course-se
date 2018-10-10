@@ -2,18 +2,23 @@ import java.io.OutputStream
 
 typealias Param = Pair<String, String>
 
+@DslMarker
+annotation class EnumerationMarker
+
+@EnumerationMarker
 class Item {
     operator fun String.unaryPlus() {
         TODO()
     }
 }
 
-class Itemizer {
+@EnumerationMarker
+class Enumeration {
     fun item(builder: Item.() -> Unit) = Item().apply(builder)
 }
 
 class BeamerFrame {
-    fun itemize(action: Itemizer.() -> Unit) = Itemizer().apply(action)
+    fun itemize(action: Enumeration.() -> Unit) = Enumeration().apply(action)
 }
 
 class GenericTag {
