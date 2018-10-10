@@ -110,7 +110,7 @@ class TexBuilderTest {
             documentWithText.render()
         )
     }
-    
+
     @Test
     fun `document can contain math equations`() {
         val documentWithMath = document {
@@ -128,6 +128,35 @@ class TexBuilderTest {
             \end{document}
             """.trimIndent(),
             documentWithMath.render()
+        )
+    }
+
+    @Test
+    fun `document can contain beamer slides`() {
+        val slides = document {
+            frame("frame1") {
+                +"frame 1 text"
+            }
+
+            frame("frame2", "key" to "value") {
+                +"frame 2 text"
+            }
+        }
+
+        assertEquals(
+            """
+            \begin{document}
+            \begin{frame}
+            \frametitle{frame1}
+            frame 1 text
+            \end{frame}
+            \begin[key=value]{frame}
+            \frametitle{frame2}
+            frame 2 text
+            \end{frame}
+            \end{document}
+            """.trimIndent(),
+            slides.render()
         )
     }
 }

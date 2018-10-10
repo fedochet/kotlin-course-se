@@ -21,8 +21,10 @@ class Item : Renderable {
     override fun render() = "\\item $buffer"
 }
 
-abstract class TexTag : Renderable {
-    abstract val name: String
+abstract class TexTag(
+    private val name: String,
+    private val params: List<Param> = emptyList()
+) : Renderable {
     protected val content: MutableList<String> = mutableListOf()
 
     fun itemize(action: TexList.() -> Unit) {
@@ -39,7 +41,7 @@ abstract class TexTag : Renderable {
 
     // todo forbid to use frames inside frames
     fun frame(frameTitle: String, vararg params: Param, builder: BeamerFrame.() -> Unit) {
-        TODO()
+        content.add(BeamerFrame(frameTitle, params.asList()).apply(builder).render())
     }
 
     fun equation(builder: EquationEnv.() -> Unit) {
@@ -47,12 +49,13 @@ abstract class TexTag : Renderable {
     }
 
     fun customTag(name: String, vararg params: Param, builder: CustomTag.() -> Unit) {
-        content.add(CustomTag(name, params).apply(builder).render())
+        content.add(CustomTag(name, params.asList()).apply(builder).render())
     }
 
     override fun render(): String {
         return buildString {
-            appendln("\\begin{$name}")
+            val formattedOptions = if (params.isNotEmpty()) params.joinToString(",", "[", "]") { "${it.first}=${it.second}" } else ""
+            appendln("\\begin$formattedOptions{$name}")
             for (item in content) {
                 appendln(item)
             }
@@ -62,7 +65,7 @@ abstract class TexTag : Renderable {
 }
 
 @EnumerationMarker
-class TexList private constructor(override val name: String) : TexTag() {
+class TexList private constructor(name: String) : TexTag(name) {
     fun item(builder: Item.() -> Unit) {
         content.add(Item().apply(builder).render())
     }
@@ -73,15 +76,15 @@ class TexList private constructor(override val name: String) : TexTag() {
     }
 }
 
-class BeamerFrame : TexTag() {
-    override val name: String = "frame"
+class BeamerFrame(frameTitle: String, params: List<Param>) : TexTag("frame", params) {
+    init {
+        content.add("\\frametitle{$frameTitle}")
+    }
 }
 
-class CustomTag(override val name: String, params: Array<out Param>) : TexTag()
+class CustomTag(name: String, params: List<Param>) : TexTag(name, params)
 
-class TexBuilder : TexTag() {
-    override val name = "document"
-
+class TexBuilder : TexTag("document") {
     private var documentClass: String? = null
     private val packages: MutableList<TexPackage> = mutableListOf()
 
