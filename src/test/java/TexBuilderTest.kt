@@ -1,4 +1,4 @@
-import org.junit.Assert.*
+import org.junit.Assert.assertEquals
 import org.junit.Test
 
 class TexBuilderTest {
@@ -11,7 +11,7 @@ class TexBuilderTest {
             \begin{document}
             \end{document}
             """.trimIndent(),
-            emptyDocument.renderToString()
+            emptyDocument.render()
         )
     }
 
@@ -31,7 +31,7 @@ class TexBuilderTest {
             \begin{document}
             \end{document}
             """.trimIndent(),
-            basicDocument.renderToString()
+            basicDocument.render()
         )
     }
 
@@ -39,8 +39,8 @@ class TexBuilderTest {
     fun `document can contain text`() {
         val documentWithText = document {
             documentClass("article")
-            + "text inside document"
-            + "text on another line"
+            +"text inside document"
+            +"text on another line"
         }
 
         assertEquals(
@@ -51,7 +51,71 @@ class TexBuilderTest {
             text on another line
             \end{document}
             """.trimIndent(),
-            documentWithText.renderToString()
+            documentWithText.render()
         )
+    }
+
+    @Test
+    fun `document can contain itemized list`() {
+        val documentWithText = document {
+            itemize {
+                item { +"item 1" }
+                item { +"item 2" }
+                itemize {
+                    item { +"nested item" }
+                }
+            }
+        }
+
+        assertEquals(
+            """
+            \begin{document}
+            \begin{itemize}
+            \item item 1
+            \item item 2
+            \begin{itemize}
+            \item nested item
+            \end{itemize}
+            \end{itemize}
+            \end{document}
+            """.trimIndent(),
+            documentWithText.render()
+        )
+    }
+
+    @Test
+    fun `document can contain enumerated list`() {
+        val documentWithText = document {
+            enumerate {
+                item { +"item 1" }
+                item { +"item 2" }
+                enumerate {
+                    item { +"nested item" }
+                }
+            }
+        }
+
+        assertEquals(
+            """
+            \begin{document}
+            \begin{enumerate}
+            \item item 1
+            \item item 2
+            \begin{enumerate}
+            \item nested item
+            \end{enumerate}
+            \end{enumerate}
+            \end{document}
+            """.trimIndent(),
+            documentWithText.render()
+        )
+    }
+
+
+    @Test
+    fun `document can contain math equations`() {
+        document {
+
+        }
     }
 }

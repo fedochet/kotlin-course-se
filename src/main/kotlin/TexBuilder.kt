@@ -5,23 +5,60 @@ typealias Param = Pair<String, String>
 
 data class TexPackage(val name: String, val options: List<String>)
 
+interface Renderable {
+    fun render(): String
+}
+
 @DslMarker
 annotation class EnumerationMarker
 
 @EnumerationMarker
-class Item {
+class Item : Renderable {
+    private val buffer = StringBuilder()
     operator fun String.unaryPlus() {
-        TODO()
+        buffer.append(this)
     }
+
+    override fun render() = "\\item $buffer"
 }
 
 @EnumerationMarker
-class Enumeration {
-    fun item(builder: Item.() -> Unit) = Item().apply(builder)
+class TexList private constructor(private val name: String) : Renderable {
+    private val items: MutableList<Renderable> = mutableListOf()
+
+    fun item(builder: Item.() -> Unit) {
+        items.add(Item().apply(builder))
+    }
+
+    fun itemize(action: TexList.() -> Unit) {
+        items.add(itemized().apply(action))
+    }
+
+    fun enumerate(action: TexList.() -> Unit) {
+        items.add(enumerated().apply(action))
+    }
+
+    override fun render(): String {
+        val buffer = StringBuilder()
+
+        buffer.appendln("\\begin{$name}")
+        for (item in items) {
+            buffer.appendln(item.render())
+        }
+        buffer.append("\\end{$name}")
+
+        return buffer.toString()
+    }
+
+    companion object {
+        fun enumerated() = TexList("enumerate")
+        fun itemized() = TexList("itemize")
+    }
 }
 
 class BeamerFrame {
-    fun itemize(action: Enumeration.() -> Unit) = Enumeration().apply(action)
+    fun itemize(action: TexList.() -> Unit) = TexList.itemized().apply(action)
+    fun enumerate(action: TexList.() -> Unit) = TexList.enumerated().apply(action)
 }
 
 class GenericTag {
@@ -30,10 +67,13 @@ class GenericTag {
     }
 }
 
-class TexBuilder {
+class TexBuilder : Renderable {
     private var documentClass: String? = null
+
     private val packages: MutableList<TexPackage> = mutableListOf()
     private val content: MutableList<String> = mutableListOf()
+
+    override fun render(): String = ByteArrayOutputStream().also { toOutputStream(it) }.toString()
 
     fun documentClass(name: String) {
         documentClass = name
@@ -45,6 +85,14 @@ class TexBuilder {
 
     operator fun String.unaryPlus() {
         content.add(this)
+    }
+
+    fun itemize(action: TexList.() -> Unit) {
+        content.add(TexList.itemized().apply(action).render())
+    }
+
+    fun enumerate(action: TexList.() -> Unit) {
+        content.add(TexList.enumerated().apply(action).render())
     }
 
     // todo forbid to use frames inside frames
@@ -79,8 +127,6 @@ class TexBuilder {
         return "\\usepackage$formattedOptions{$name}"
     }
 }
-
-fun TexBuilder.renderToString() = ByteArrayOutputStream().also { toOutputStream(it) }.toString()
 
 fun document(builder: TexBuilder.() -> Unit) = TexBuilder().apply(builder)
 
